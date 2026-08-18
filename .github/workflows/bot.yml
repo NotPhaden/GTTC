@@ -1,31 +1,27 @@
-name: MGKK Discord Bot
+name: GTTC Discord Bot
 
 on:
-  schedule:
-    - cron: '*/5 * * * *'
   workflow_dispatch:
+  schedule:
+    - cron: "*/5 * * * *"
 
 permissions:
-  contents: write
-
-concurrency:
-  group: mgkk-bot
-  cancel-in-progress: false
+  contents: read
 
 jobs:
-  check-rank:
+  check-gttc:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
 
     env:
+      # Locked to GTTC. bot.js also hardcodes GTTC as a second safeguard.
+      LEAGUE_NAME: GTTC
       DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
       DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_CHANNEL_ID }}
-      LEAGUE_NAME: MGKK
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup Node.js 24
         uses: actions/setup-node@v4
@@ -34,23 +30,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install discord.js@14.27.0 dotenv@17.4.2
 
-      - name: Check MGKK rank
+      - name: Check GTTC rank
         run: node bot.js
-
-      - name: Save updated state
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          if git diff --quiet -- state.json; then
-            echo "state.json did not change."
-            exit 0
-          fi
-
-          git add state.json
-          git commit -m "chore: update MGKK rank state"
-
-          git pull --rebase origin main
-          git push origin main
